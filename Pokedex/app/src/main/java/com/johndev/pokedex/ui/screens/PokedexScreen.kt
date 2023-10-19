@@ -3,10 +3,12 @@ package com.johndev.pokedex.ui.screens
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,7 +53,7 @@ import com.johndev.pokedex.common.utils.getImageById
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PokedexScreen() {
+fun PokedexScreen(onNavigation: (Int) -> Unit) {
     val pokemonListState = remember { mutableStateOf<List<PokemonEntity>?>(null) }
     val tempList = mutableListOf<PokemonEntity>()
     val offset = remember { mutableStateOf(0) }
@@ -82,11 +84,17 @@ fun PokedexScreen() {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                MainContent(pokemonListState.value) {
-                    offset.value += 50
-                    limit.value += 50
-                    pokemonListState.value = null
-                }
+                MainContent(
+                    listPokemon = pokemonListState.value,
+                    callback = {
+                        offset.value += 50
+                        limit.value += 50
+                        pokemonListState.value = null
+                    },
+                    onNavigation = {
+                        onNavigation(it)
+                    }
+                )
             }
         },
         floatingActionButton = {
@@ -102,7 +110,7 @@ fun PokedexScreen() {
 }
 
 @Composable
-fun MainContent(listPokemon: List<PokemonEntity>?, callback: () -> Unit) {
+fun MainContent(listPokemon: List<PokemonEntity>?, callback: () -> Unit, onNavigation: (Int) -> Unit) {
     if (listPokemon == null) {
         // Composable para indicar que esta cargando
         CircularProgressIndicator()
@@ -112,9 +120,9 @@ fun MainContent(listPokemon: List<PokemonEntity>?, callback: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
-            //.verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState())
         ) {
-            LazyVerticalGrid(
+            /*LazyVerticalGrid(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 columns = GridCells.Fixed(2),
@@ -122,11 +130,13 @@ fun MainContent(listPokemon: List<PokemonEntity>?, callback: () -> Unit) {
                 items(listPokemon.size) {
                     CardPokemonItemGrid(pokemonEntity = listPokemon[it])
                 }
-            })
-            /*listPokemon.forEach {
-                CardPokemonItem(it)
+            })*/
+            listPokemon.forEach {
+                CardPokemonItem(it) { id ->
+                    onNavigation(id)
+                }
                 Spacer(modifier = Modifier.height(8.dp))
-            }*/
+            }
             /*LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -170,11 +180,12 @@ fun CardPokemonItemGrid(pokemonEntity: PokemonEntity) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CardPokemonItem(pokemonEntity: PokemonEntity) {
+fun CardPokemonItem(pokemonEntity: PokemonEntity, callback: (Int) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
+            .clickable {  callback(pokemonEntity.id) },
     ) {
         Column(
             modifier = Modifier

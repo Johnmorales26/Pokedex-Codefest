@@ -1,8 +1,10 @@
 package com.johndev.pokedex.ui.screens
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavBackStackEntry
 
 @Composable
-fun DetailScreen() {
+fun DetailScreen(id: Int) {
 
 }
