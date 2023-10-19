@@ -2,10 +2,12 @@ package com.johndev.pokedex.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,13 +15,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -31,7 +43,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.johndev.pokedex.Greeting
 import com.johndev.pokedex.R
 import com.johndev.pokedex.common.entities.PokemonEntity
 import com.johndev.pokedex.common.entities.Sprites
@@ -47,13 +58,15 @@ import com.johndev.pokedex.ui.theme.PokedexTheme
 fun PokedexScreen() {
     val pokemonListState = remember { mutableStateOf<List<PokemonEntity>?>(null) }
     val tempList = mutableListOf<PokemonEntity>()
+    val offset = remember { mutableStateOf(0) }
+    val limit = remember { mutableStateOf(10) }
     // Realiza la solicitud de los 10 primeros Pokemon
-    for (index in 1..20) {
+    for (index in offset.value..limit.value) {
         LaunchedEffect(index) {
             try {
                 val response = service.getPokemonInfo(index.toString())
                 tempList.add(response)
-                if (tempList.size == 20) {
+                if (tempList.size == 10) {
                     pokemonListState.value = tempList.toList().sortedByDescending { it.id }
                 }
             } catch (e: Exception) {
@@ -64,7 +77,8 @@ fun PokedexScreen() {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(title = { Text(stringResource(id = R.string.app_name)) })
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(id = R.string.app_name)) })
         },
         content = { paddingValues ->
             Box(
@@ -72,27 +86,52 @@ fun PokedexScreen() {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                MainContent(pokemonListState.value)
+                MainContent(pokemonListState.value) {
+                    offset.value += 10
+                    limit.value += 10
+                    pokemonListState.value = null
+                }
             }
         }
     )
 }
 
 @Composable
-fun MainContent(listPokemon: List<PokemonEntity>?) {
+fun MainContent(listPokemon: List<PokemonEntity>?, callback: () -> Unit) {
     if (listPokemon == null) {
         // Composable para indicar que esta cargando
         CircularProgressIndicator()
     } else {
         //  Pintar los datos cargados
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            content = {
-                items(listPokemon.size) {
-                    CardPokemonItem(listPokemon[it])
-                }
-            })
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            listPokemon.forEach {
+                CardPokemonItem(it)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            /*LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                content = {
+                    items(listPokemon.size) {
+                        CardPokemonItem(listPokemon[it])
+                    }
+                })*/
+            Button(onClick = { callback() }) {
+                Text(text = "Prueba")
+            }
+        }
     }
+}
+
+@Composable
+fun CardPokemonItemGrid() {
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,6 +146,7 @@ fun CardPokemonItem(pokemonEntity: PokemonEntity) {
             modifier = Modifier
                 .weight(3f)
                 .fillMaxHeight()
+                .padding(8.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -127,10 +167,10 @@ fun CardPokemonItem(pokemonEntity: PokemonEntity) {
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(pokemonEntity.types.size) {
-                        val type = pokemonEntity.types[it].name
+                        val type = pokemonEntity.types[it].type.name
                         AssistChip(
                             onClick = { },
-                            label = { Text(text = if (type != null) type.capitalizeFirstLetter() else "" ) })
+                            label = { Text(text = if (type != null) type.capitalizeFirstLetter() else "") })
                     }
                 }
             }
@@ -154,24 +194,3 @@ fun CardPokemonItem(pokemonEntity: PokemonEntity) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PokedexTheme {
-        val pokemonEntity = PokemonEntity(
-            id = 1,
-            name = "Bulbasaur",
-            height = 7,
-            peso = 69.0,
-            types = listOf(
-                Type(
-                    name = "Grass",
-                )
-            ),
-            sprites = Sprites(
-                image = ""
-            )
-        )
-        CardPokemonItem(pokemonEntity = pokemonEntity)
-    }
-}
