@@ -29,7 +29,9 @@ fun Navigation() {
                 }
             )
         ) {
-            DetailScreen(it.arguments?.getInt("id") ?: 0)
+            DetailScreen(it.arguments?.getInt("id") ?: 0) {
+                navController.popBackStack()
+            }
         }
     }
 }

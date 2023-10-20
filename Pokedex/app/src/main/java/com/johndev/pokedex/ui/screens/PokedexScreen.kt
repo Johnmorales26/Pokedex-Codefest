@@ -30,6 +30,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -113,7 +114,11 @@ fun PokedexScreen(onNavigation: (Int) -> Unit) {
 fun MainContent(listPokemon: List<PokemonEntity>?, callback: () -> Unit, onNavigation: (Int) -> Unit) {
     if (listPokemon == null) {
         // Composable para indicar que esta cargando
-        CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     } else {
         //  Pintar los datos cargados
         Column(
@@ -185,7 +190,7 @@ fun CardPokemonItem(pokemonEntity: PokemonEntity, callback: (Int) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
-            .clickable {  callback(pokemonEntity.id) },
+            .clickable { callback(pokemonEntity.id) },
     ) {
         Column(
             modifier = Modifier
@@ -199,8 +204,8 @@ fun CardPokemonItem(pokemonEntity: PokemonEntity, callback: (Int) -> Unit) {
                     .weight(1f),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = formatId(pokemonEntity.id))
-                Text(text = pokemonEntity.name.capitalizeFirstLetter())
+                Text(text = formatId(pokemonEntity.id), style = MaterialTheme.typography.bodyMedium)
+                Text(text = pokemonEntity.name.capitalizeFirstLetter(), style = MaterialTheme.typography.titleMedium)
             }
             Row(
                 modifier = Modifier
