@@ -6,8 +6,8 @@ data class PokemonEntity(
     var id: Int,
     var name: String,
     var height: Int,
-    @SerializedName("weight")
-    var peso: Double,
+    var weight: Double,
     var types: List<Types>,
-    var sprites: Sprites
+    var sprites: Sprites,
+    var stats: Stats
 )
